@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>頭がオカシイパロディサイト（完全版）</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#ff7ab6;--muted:#94a3b8}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial; background:linear-gradient(135deg,#071126 0%,#0f172a 100%);color:#e6eef8;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:10px}
+    .wrap{width:100%;max-width:720px;padding:12px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.08));box-shadow:0 10px 30px rgba(2,6,23,0.6);display:flex;flex-direction:column}
+    header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(45deg,var(--accent),#7ad7ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:#081022;font-size:18px;flex-shrink:0}
+    h1{margin:0;font-size:18px;line-height:1.3}
+    p.lead{color:var(--muted);margin-top:4px;font-size:12px}
+
+    .controls{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+    button{flex:1;min-width:80px;background:linear-gradient(180deg,var(--accent),#ff4d9e);border:0;padding:8px 10px;border-radius:10px;color:#06101b;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(255,122,182,0.12);font-size:14px}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);box-shadow:none}
+
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:10px;margin-top:10px;min-height:100px;display:flex;align-items:center;justify-content:center;flex-direction:column}
+    .phrase{font-size:18px;font-weight:800;letter-spacing:0.6px;text-align:center;word-break:break-word}
+    .sub{color:var(--muted);margin-top:6px;font-size:12px;text-align:center}
+
+    .copy-row{margin-top:8px;display:flex;gap:6px;width:100%}
+    .copy-btn{flex:1;padding:6px;border-radius:10px;border:0;font-weight:800;cursor:pointer;font-size:13px}
+    .copy-primary{background:#0ea5a5;color:#021012}
+    .copy-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+
+    .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;margin-top:10px}
+    .chip{background:rgba(255,255,255,0.02);padding:6px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.02);color:var(--muted);font-weight:700;text-align:center;user-select:text;cursor:pointer;font-size:13px;word-break:break-word}
+    .chip.selected{background:rgba(255,122,182,0.3);border-color:var(--accent);color:#fff}
+
+    footer{margin-top:10px;color:var(--muted);font-size:12px;text-align:center;line-height:1.4}
+
+    .wiggle{display:inline-block;transform-origin:center;animation:wig 2s ease-in-out infinite}
+    @keyframes wig{0%{transform:rotate(-3deg)}25%{transform:rotate(3deg)}50%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}100%{transform:rotate(-3deg)}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="logo">🤪</div>
+      <div>
+        <h1>頭がオカシイパロディサイト <span class="wiggle">🌀</span></h1>
+        <p class="lead">スマホ縦長完全対応カオスワードジェネレーター。</p>
+      </div>
+    </header>
+
+    <section class="controls">
+      <button id="gen">ランダム生成</button>
+      <button id="genLong">ながーい生成</button>
+      <button id="genName">名前風生成</button>
+      <button id="combine">合体する</button>
+      <button id="autoSuggest">おすすめ合体</button>
+      <button id="clear" class="btn-ghost">リセット</button>
+    </section>
+
+    <section class="card">
+      <div id="phrase" class="phrase" tabindex="0">ここにとんでもワードが出るよ！</div>
+      <div id="hint" class="sub">※ネタ用の無意味ワードです。</div>
+
+      <div class="copy-row">
+        <button id="copyPhrase" class="copy-btn copy-primary">フレーズをコピー</button>
+        <button id="selectPhrase" class="copy-btn copy-ghost">長押しで選択</button>
+      </div>
+    </section>
+
+    <h3 style="margin-top:14px;color:var(--muted);font-size:13px">履歴</h3>
+    <div class="list" id="history"></div>
+    <h3 style="margin-top:14px;color:var(--muted);font-size:13px">全単語リスト</h3>
+    <div class="list" id="allSeeds"></div>
+
+    <footer>
+      例：う◯ち + どぴゅ → う◯ちどぴゅ — ネタ専用だよ
+    </footer>
+  </main>
+
+  <script>
+    const seeds = [
+      'うんち','ちんこ','まんこ','ちんぽ','どぴゅ',
+      'ぼっき','うん','えろ','もっこり','ぎん',
+      'ちん','しこ','ふぇら','おっぱい','いく',
+      'いらま','ぱい','ずり','こんどーむ','びゅる'
+    ];
+
+    const phraseEl = document.getElementById('phrase');
+    const history = document.getElementById('history');
+    const allSeeds = document.getElementById('allSeeds');
+
+    function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+    function gen(count=2+Math.floor(Math.random()*3)){
+      let parts = [];
+      for(let i=0;i<count;i++) parts.push(rand(seeds));
+      const combo = parts.join('');
+      phraseEl.textContent = combo;
+      addHistory(combo);
+      suggestCombo(combo);
+    }
+
+    function genLong(){
+      const count = 6+Math.floor(Math.random()*6);
+      gen(count);
+    }
+
+    function genName(){
+      let parts = [];
+      const count = 2 + Math.floor(Math.random()*2);
+      for(let i=0;i<count;i++) parts.push(rand(seeds));
+      const name = parts.join('・');
+      phraseEl.textContent = name;
+      addHistory(name);
+      suggestCombo(name);
+    }
+
+    function addHistory(text){
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.textContent = text;
+      chip.title = 'タップで選択';
+      chip.addEventListener('click',()=>{
+        chip.classList.toggle('selected');
+      });
+      history.prepend(chip);
+      while(history.children.length>12) history.removeChild(history.lastChild);
+    }
+
+    function copyText(text){
+      if(!navigator.clipboard){
+        const ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} ta.remove();
+        alert('コピーしました');
+        return;
+      }
+      navigator.clipboard.writeText(text).then(()=>{
+        const prev = document.title;
+        document.title = 'コピーしました ✅';
+        setTimeout(()=>document.title = prev,1000);
+      }).catch(()=>alert('コピーに失敗しました'));
+    }
+
+    document.getElementById('gen').addEventListener('click',()=>gen());
+    document.getElementById('genLong').addEventListener('click',genLong);
+    document.getElementById('genName').addEventListener('click',genName);
+    document.getElementById('clear').addEventListener('click',()=>{phraseEl.textContent='ここにとんでもワードが出るよ！';history.innerHTML='';document.getElementById('hint').textContent='※ネタ用の無意味ワードです。';});
+
+    document.getElementById('copyPhrase').addEventListener('click',()=>copyText(phraseEl.textContent));
+    document.getElementById('selectPhrase').addEventListener('click',()=>{
+      try{const range = document.createRange();range.selectNodeContents(phraseEl);const sel = window.getSelection();sel.removeAllRanges();sel.addRange(range);}catch(e){}
+      phraseEl.focus();
+    });
+
+    document.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='g') gen(); });
+
+    // seeds 全表示
+    seeds.forEach(word=>{
+      const chip = document.createElement('div');
+      chip.className='chip';
+      chip.textContent=word;
+      chip.addEventListener('click',()=>{
+        chip.classList.toggle('selected');
+      });
+      allSeeds.appendChild(chip);
+    });
+
+    // 合体ボタン
+    document.getElementById('combine').addEventListener('click',()=>{
+      combineSelected();
+    });
+
+    // おすすめ合体（ランダムで毎回変わる）
+    document.getElementById('autoSuggest').addEventListener('click',()=>{
+      const combo = suggestCombo(phraseEl.textContent, true);
+      phraseEl.textContent = combo;
+      addHistory(combo);
+    });
+
+    function combineSelected(){
+      const selectedSeeds = [...allSeeds.querySelectorAll('.chip.selected')].map(c=>c.textContent);
+      const selectedHistory = [...history.querySelectorAll('.chip.selected')].map(c=>c.textContent);
+      const selected = [...selectedSeeds, ...selectedHistory];
+      if(selected.length===0) return;
+      const base = phraseEl.textContent!=='ここにとんでもワードが出るよ！' ? phraseEl.textContent : '';
+      const combo = base + selected.join('');
+      phraseEl.textContent = combo;
+      addHistory(combo);
+      [...allSeeds.querySelectorAll('.chip.selected'),...history.querySelectorAll('.chip.selected')].forEach(c=>c.classList.remove('selected'));
+      suggestCombo(combo);
+    }
+
+    function suggestCombo(base, forceNew=false){
+      let suggestion;
+      if(forceNew || Math.random()>0.5){
+        suggestion = base + rand(seeds);
+      } else {
+        const items = [...history.querySelectorAll('.chip')].map(c=>c.textContent);
+        suggestion = items.length>0 ? base + rand(items) : base + rand(seeds);
+      }
+      document.getElementById('hint').textContent = `💡おすすめ合体: ${suggestion}`;
+      return suggestion;
+    }
+
+    window.addEventListener('load',()=>{gen();});
+  </script>
+</body>
+</html>
