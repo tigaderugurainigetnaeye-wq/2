@@ -91,6 +91,42 @@
 
     function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
 
+    /* 🎵 効果音関数 */
+    function playBeep(){
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 440;
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    }
+
+    function playJajaan(){
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(220, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.8);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 1);
+    }
+
+    function playSfx(){
+      if(Math.random() < 0.5){
+        playBeep();
+      } else {
+        playJajaan();
+      }
+    }
+
     function gen(count=2+Math.floor(Math.random()*3)){
       let parts = [];
       for(let i=0;i<count;i++) parts.push(rand(seeds));
@@ -141,9 +177,16 @@
       }).catch(()=>alert('コピーに失敗しました'));
     }
 
-    document.getElementById('gen').addEventListener('click',()=>gen());
-    document.getElementById('genLong').addEventListener('click',genLong);
-    document.getElementById('genName').addEventListener('click',genName);
+    document.getElementById('gen').addEventListener('click',()=>{gen();playSfx();});
+    document.getElementById('genLong').addEventListener('click',()=>{genLong();playSfx();});
+    document.getElementById('genName').addEventListener('click',()=>{genName();playSfx();});
+    document.getElementById('combine').addEventListener('click',()=>{combineSelected();playSfx();});
+    document.getElementById('autoSuggest').addEventListener('click',()=>{
+      const combo = suggestCombo(phraseEl.textContent, true);
+      phraseEl.textContent = combo;
+      addHistory(combo);
+      playSfx();
+    });
     document.getElementById('clear').addEventListener('click',()=>{phraseEl.textContent='ここにとんでもワードが出るよ！';history.innerHTML='';document.getElementById('hint').textContent='※ネタ用の無意味ワードです。';});
 
     document.getElementById('copyPhrase').addEventListener('click',()=>copyText(phraseEl.textContent));
@@ -152,7 +195,7 @@
       phraseEl.focus();
     });
 
-    document.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='g') gen(); });
+    document.addEventListener('keydown',e=>{ if(e.key.toLowerCase()==='g') {gen();playSfx();} });
 
     // seeds 全表示
     seeds.forEach(word=>{
@@ -166,17 +209,6 @@
     });
 
     // 合体ボタン
-    document.getElementById('combine').addEventListener('click',()=>{
-      combineSelected();
-    });
-
-    // おすすめ合体（ランダムで毎回変わる）
-    document.getElementById('autoSuggest').addEventListener('click',()=>{
-      const combo = suggestCombo(phraseEl.textContent, true);
-      phraseEl.textContent = combo;
-      addHistory(combo);
-    });
-
     function combineSelected(){
       const selectedSeeds = [...allSeeds.querySelectorAll('.chip.selected')].map(c=>c.textContent);
       const selectedHistory = [...history.querySelectorAll('.chip.selected')].map(c=>c.textContent);
@@ -206,4 +238,3 @@
   </script>
 </body>
 </html>
-
